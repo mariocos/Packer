@@ -42,6 +42,7 @@ typedef struct s_ranges
 	size_t textIndex;
 	size_t targetSegment;
 }	t_ranges;
+
 //functons
 void	*get_map(char *str);
 int	get_new_file_fd(char *str);

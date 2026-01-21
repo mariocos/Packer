@@ -1,5 +1,18 @@
 #include "packer.h"
 
+unsigned char shellCode[] = {
+    0xb8, 0x01, 0x00, 0x00, 0x00,
+    0xbf, 0x01, 0x00, 0x00, 0x00,
+    0x48, 0x8b, 0x35, 0x10, 0x00, 0x00, 0x00,
+    0xba, 0x01, 0x00, 0x00, 0x00,
+    0x0f, 0x05,
+    0x48, 0x8b, 0x05, 0x03, 0x00, 0x00, 0x00,
+    0xff, 0xe0,
+    0x61,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+};
+
+size_t	fileSize = 0;
 
 /*
 
@@ -124,6 +137,18 @@ int main(int ac, char** av)
 	setSectionsInSegment(map, &elfPtrs, &ranges);
 
 
+	unsigned char shellCode[] = {
+    0xb8, 0x01, 0x00, 0x00, 0x00,
+    0xbf, 0x01, 0x00, 0x00, 0x00,
+    0x48, 0x8d, 0x35, 0x10, 0x00, 0x00, 0x00,
+    0xba, 0x01, 0x00, 0x00, 0x00,
+    0x0f, 0x05,
+    0x48, 0x8b, 0x05, 0x03, 0x00, 0x00, 0x00,
+    0xff, 0xe0,
+    0x61,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+	};
+
 	/* now the hard part does .text have space to inject */
 	setRangeOfText(map, &elfPtrs, &ranges);
 	if (ranges.textIndex == ranges.sectionAfterText)//if .text is at end of file will be handled later because requires extra logic.
@@ -132,6 +157,21 @@ int main(int ac, char** av)
 	}
 	else// i got to the point where i can calculate the size of the code cave, i want to now check if the code cave is mapped by the target segment.
 	{
+		size_t entryPoint = elfPtrs.ehdr->e_entry;
+		size_t newEntry = elfPtrs.targetSegment->p_vaddr + elfPtrs.targetSegment->p_filesz;
+		
+		elfPtrs.ehdr->e_entry = newEntry;
+		
+		
+		memcpy((void*)(shellCode + sizeof(shellCode) - 8), &entryPoint, 8);
+		
+		memmove((void*)(map + elfPtrs.targetSegment->p_offset + elfPtrs.targetSegment->p_filesz), shellCode,sizeof(shellCode));
+		
+		elfPtrs.targetSegment->p_filesz += sizeof(shellCode);
+		elfPtrs.targetSegment->p_memsz += sizeof(shellCode);
+
+		write(newFd, map, fileSize);
+
 		printf("text index [%ld] next index [%d]\n", ranges.textIndex, ranges.sectionAfterText);
 		printf("text offs [%ld], next offst [%ld]\n", elfPtrs.sHdrTable[ranges.textIndex].sh_offset + elfPtrs.sHdrTable[ranges.textIndex].sh_size, elfPtrs.sHdrTable[ranges.sectionAfterText].sh_offset);
 	}

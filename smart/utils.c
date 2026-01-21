@@ -1,5 +1,7 @@
 #include "packer.h"
 
+extern size_t fileSize;
+
 void	*get_map(char *str)
 {
 	if (!str)
@@ -10,7 +12,8 @@ void	*get_map(char *str)
 		write(2, "problem opening file\n", 21);
 		return (NULL);
 	}
-	void	*map = mmap(NULL, lseek(fd, 0, SEEK_END), PROT_READ, MAP_PRIVATE, fd, 0);
+	fileSize = lseek(fd, 0, SEEK_END);
+	void	*map = mmap(NULL, fileSize, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 	if (map == MAP_FAILED)
 	{
 		write(2, "problem mapping file\n", 21);

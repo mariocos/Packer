@@ -1,0 +1,4 @@
+after creating the object file
+
+objcopy -O binary --only-section=.text shell.o shellcode.bin
+
