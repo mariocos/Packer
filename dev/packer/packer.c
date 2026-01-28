@@ -166,14 +166,14 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // Calculate pointer to actual code using the section offset
+    /* Calculate pointer to actual code using the section offset */
     void *exec_ptr = (uint8_t *)map + text_sec->sh_offset;
     size_t exec_size = text_sec->sh_size;
 
     DBPRINTF("Encrypting .text at offset %lx with size %zu\n", 
               text_sec->sh_offset, exec_size);
 
-	printf("%p\n", exec_ptr);
+	printf("Address of encryption:%p, size of encryption:%lu\n", exec_ptr, exec_size);
 	encrypt_data(exec_ptr, exec_size, key);
 
 	DBPRINTF("157\n");

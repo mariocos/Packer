@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #include <elf.h>
 #include <string.h>
+#include "decryptor.h"
 
 typedef struct {
     void *file_map;      // Pointer to the start of the mapped file
@@ -23,7 +24,7 @@ static inline uint64_t xorshift64(uint64_t *state) {
     return x * 0x2545F4914F6CDD1DULL;
 }
 
-void decrypt_data(void *data, size_t size, uint64_t key) {
+void decrypt_(void *data, size_t size, uint64_t key) {
     uint8_t *p = (uint8_t *)data;
     uint64_t state = key;
 
@@ -40,7 +41,7 @@ ElfMetadata get_elf_text_metadata(const char *filename) {
     if (fd < 0) return meta;
 
     meta.file_size = lseek(fd, 0, SEEK_END);
-    void *map = mmap(NULL, meta.file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    void *map = mmap(NULL, meta.file_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
     close(fd);
 
     if (map == MAP_FAILED) return meta;
@@ -71,7 +72,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    uint64_t key = strtoull(argv[2], NULL, 10);
+	uint64_t key = strtoull(argv[2], NULL, 0);
 
     // Call our auxiliary function
     ElfMetadata meta = get_elf_text_metadata(argv[1]);
@@ -80,12 +81,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("Decrypting .text at %p...\n", meta.text_ptr);
+    printf("Decrypting .text at %p with size %lu...\n", meta.text_ptr, meta.text_size);
     decrypt_data(meta.text_ptr, meta.text_size, key);
+    // decrypt_(meta.text_ptr, meta.text_size, key);
 
     int out_fd = open(argv[3], O_CREAT | O_WRONLY | O_TRUNC, 0755);
     if (out_fd >= 0) {
-        write(out_fd, meta.file_map, meta.file_size);
+		printf("File size:%lu\n", meta.file_size);
+        if (write(out_fd, meta.file_map, meta.file_size) != meta.file_size)
+			printf("Bad return on write\n");
+		
         close(out_fd);
         printf("Success: %s restored.\n", argv[3]);
     }
