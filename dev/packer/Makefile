@@ -1,5 +1,6 @@
 NAME = lib_asm.a
-SRCS = decrypt.s
+# SRCS = decrypt.s
+SRCS = decryptM.s
 		
 OBJ = $(SRCS:.s=.o)
 

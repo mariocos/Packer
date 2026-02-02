@@ -82,8 +82,8 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Decrypting .text at %p with size %lu...\n", meta.text_ptr, meta.text_size);
-    decrypt_data(meta.text_ptr, meta.text_size, key);
-    // decrypt_(meta.text_ptr, meta.text_size, key);
+    // decrypt_data(meta.text_ptr, meta.text_size, key);
+    decrypt_data(meta.text_ptr);
 
     int out_fd = open(argv[3], O_CREAT | O_WRONLY | O_TRUNC, 0755);
     if (out_fd >= 0) {
