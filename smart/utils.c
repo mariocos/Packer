@@ -24,7 +24,7 @@ int	get_new_file_fd(char *str)
 {
 	(void)str;//TODO: append this to file name
 	char new_file_name[6] = "woody";
-	int fd = open(new_file_name, O_WRONLY | O_CREAT | O_APPEND, 0644);
+	int fd = open(new_file_name, O_WRONLY | O_CREAT | O_APPEND, 0755);
 	return (fd);
 }
 
