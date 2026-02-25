@@ -37,15 +37,14 @@ void encrypt_data(void *data, size_t size, uint64_t key)
     }
 }
 
-/* This is not needed at pack-time as the encryption runs on the mmap string and is only needed during load time */
-void make_text_writable(void *addr, size_t size)
-{
-    size_t page = sysconf(_SC_PAGESIZE);
-    uintptr_t start = (uintptr_t)addr & ~(page - 1);
-    uintptr_t end   = ((uintptr_t)addr + size + page - 1) & ~(page - 1);
+// void make_text_writable(void *addr, size_t size)
+// {
+//     size_t page = sysconf(_SC_PAGESIZE);
+//     uintptr_t start = (uintptr_t)addr & ~(page - 1);
+//     uintptr_t end   = ((uintptr_t)addr + size + page - 1) & ~(page - 1);
 
-    mprotect((void *)start, end - start, PROT_READ | PROT_WRITE | PROT_EXEC);
-}
+//     mprotect((void *)start, end - start, PROT_READ | PROT_WRITE | PROT_EXEC);
+// }
 
 uint64_t generate_key(void)
 {

@@ -54,7 +54,9 @@ int	ft_strcmp(const char *s1, const char *s2);
 void writeHex(unsigned char c);
 
 
-
+/* Encryption */
+uint64_t generate_key(void);
+void encrypt_data(void *data, size_t size, uint64_t key);
 
 
 
