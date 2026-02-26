@@ -193,7 +193,6 @@ int main(int ac, char** av)
 		0xff
 	};
 
-
 	/* now the hard part does .text have space to inject */
 	setRangeOfText(map, &elfPtrs, &ranges);
 	if (ranges.textIndex == ranges.sectionAfterText)//if .text is at end of file will be handled later because requires extra logic.
@@ -204,39 +203,30 @@ int main(int ac, char** av)
 	{
 		size_t entryPoint = elfPtrs.ehdr->e_entry;
 		size_t newEntry = elfPtrs.targetSegment->p_vaddr + elfPtrs.targetSegment->p_filesz;
+		int flag =  0x02; // PF_W
+		memcpy((void*)(&elfPtrs.pHdrTable[ranges.targetSegment].p_flags), &flag, 4);
 
 		size_t pdataAdd = elfPtrs.targetSegment->p_vaddr;
 		size_t encryptSize = elfPtrs.targetSegment->p_memsz;
-		printf("%d\n", __LINE__);
+		size_t offsetToEncriptableData = elfPtrs.targetSegment->p_offset;
 		uint64_t encryptKey = generate_key();
-		printf("%d\n", __LINE__);
 
 		elfPtrs.ehdr->e_entry = newEntry;
 
-		printf("%d\n", __LINE__);
-		encrypt_data((void *)&pdataAdd, encryptSize, encryptKey);
+		encrypt_data((void *)(map + offsetToEncriptableData), encryptSize, encryptKey);
 		
-		printf("%d\n", __LINE__);
-		memcpy((void*)(shellCode + 2), &pdataAdd, 8);
-		printf("%d\n", __LINE__);
-		memcpy((void*)(shellCode + 11), &encryptSize, 8);
-		printf("%d\n", __LINE__);
-		memcpy((void*)(shellCode + 17), &encryptKey, 8);
+		memmove((void*)(shellCode + 2), &pdataAdd, 8);
+		memmove((void*)(shellCode + 11), &encryptSize, 8);
+		memmove((void*)(shellCode + 17), &encryptKey, 8);
 
-		printf("%d\n", __LINE__);
 		memcpy((void*)(shellCode + sizeof(shellCode) - 8), &entryPoint, 8);
-		printf("%d\n", __LINE__);
-		guaxini();
 		memcpy((void*)(map + elfPtrs.targetSegment->p_offset + elfPtrs.targetSegment->p_filesz), shellCode, sizeof(shellCode));
 		// memmove((void*)(map + elfPtrs.targetSegment->p_offset + elfPtrs.targetSegment->p_filesz), shellCode, sizeof(shellCode));
 		
-		printf("%d\n", __LINE__);
 		elfPtrs.targetSegment->p_filesz += sizeof(shellCode);
 		elfPtrs.targetSegment->p_memsz += sizeof(shellCode);
 
-		printf("%d\n", __LINE__);
 		write(newFd, map, fileSize);
-		printf("%d\n", __LINE__);
 
 		printf("text index [%ld] next index [%d]\n", ranges.textIndex, ranges.sectionAfterText);
 		printf("text offs [%ld], next offst [%ld]\n", elfPtrs.sHdrTable[ranges.textIndex].sh_offset + elfPtrs.sHdrTable[ranges.textIndex].sh_size, elfPtrs.sHdrTable[ranges.sectionAfterText].sh_offset);
