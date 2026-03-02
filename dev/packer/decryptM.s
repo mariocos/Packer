@@ -3,7 +3,7 @@ section .text
 
 
 decrypt_data:
-    ; mov     rdi, 0x571c064ab300    ; data address
+    mov     rdi, 0x571c064ab300    ; data address
     mov     rsi, 263            ; data length
     mov     rdx, 1080613555473033452    ; key
 

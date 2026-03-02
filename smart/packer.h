@@ -55,7 +55,7 @@ void writeHex(unsigned char c);
 
 
 /* Encryption */
-uint64_t generate_key(void);
+size_t generate_key(void);
 void encrypt_data(void *data, size_t size, uint64_t key);
 
 

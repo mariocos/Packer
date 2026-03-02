@@ -4,7 +4,7 @@ section .text
 
 decrypt_data:
     mov     rdi, 0xf6f6f6f6f6f6f6f6    ; data address
-    mov     rsi, 0xf0            ; data length
+    mov     rsi, 0xf0f0f0f0f0f0f0f0    ; data length ; could be
     mov     rdx, 0xf5f5f5f5f5f5f5f5    ; key
 
     cmp    rsi, 0
@@ -59,4 +59,4 @@ decrypt_data:
     syscall
 
 .done:
-    jmp 0xffffffff
+    jmp 0xf1f2f3f4f5f6f7f8

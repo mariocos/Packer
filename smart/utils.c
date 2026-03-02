@@ -56,9 +56,9 @@ void writeHex(unsigned char c)
 	write(1, &rest, 1);
 }
 
-uint64_t generate_key(void)
+size_t generate_key(void)
 {
-    uint64_t key;
+    size_t key;
     int fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0)
         exit(1);
