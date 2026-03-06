@@ -55,3 +55,38 @@ void writeHex(unsigned char c)
 	write(1, &div, 1);
 	write(1, &rest, 1);
 }
+
+size_t generate_key(void)
+{
+    size_t key;
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd < 0)
+        exit(1);
+    if (read(fd, &key, sizeof(key)) != sizeof(key))
+        exit(1);
+    close(fd);
+    return key;
+}
+
+static inline uint64_t xorshift64(uint64_t *state)
+{
+    uint64_t x = *state;
+    x ^= x >> 12;
+    x ^= x << 25;
+    x ^= x >> 27;
+    *state = x;
+    return x * 0x2545F4914F6CDD1DULL;
+}
+
+void encrypt_data(void *data, size_t size, uint64_t key)
+{
+    uint8_t *p = (uint8_t *)data;
+    uint64_t state = key;
+
+    for (size_t i = 0; i < size; i++)
+    {
+        if ((i % 8) == 0)
+            state = xorshift64(&state);
+        p[i] ^= (uint8_t)(state >> ((i % 8) * 8));
+    }
+}
