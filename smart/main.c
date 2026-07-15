@@ -21,7 +21,7 @@ void	setReleventPointers(void* map, t_ptrs* elfPtrs, t_ranges* ranges)
 		if (ft_strcmp(".text", &strTable[sHdrTable[i].sh_name]) == 0)
 		{
 			ranges->textIndex = i;
-			ranges->firstSectionInSegment = i;
+			ranges->firstSectionInSegment = i;//TODO: this seems wrong
 			break ;
 		}
 	}
@@ -68,8 +68,11 @@ void	setSectionsInSegment(void* map, t_ptrs* elfPtrs, t_ranges* ranges)
 	for (int i = 0; i < ranges->shnum ; i++)
 	{
 		if (ht[i].sh_offset >= ranges->segmentStart && ht[i].sh_offset + ht[i].sh_size <= ranges->segmentEnd 				/* if section is in segment range */
-		&& (i < ranges->firstSectionInSegment || i > ranges->lastSectionInSegment)) 										/* if is border section */
+		&& (i < ranges->firstSectionInSegment || i > ranges->lastSectionInSegment))/* if is border section */
+		{
+			printf("sections in segment %d\n",i);
 			(i < ranges->firstSectionInSegment) ? (ranges->firstSectionInSegment = i) : (ranges->lastSectionInSegment = i); /* set border value */
+		}
 	}
 }
 
@@ -86,14 +89,11 @@ if .text is at the end of the file it will set this value to ranges->textIndex i
 void	setRangeOfText(void* map, t_ptrs* elfPtrs, t_ranges* ranges)
 {
 	Elf64_Shdr* ht = elfPtrs->sHdrTable;
-	size_t nextSection = ranges->textIndex;
+	size_t nextSection = elfPtrs->ehdr->e_shnum - 1;
 
-	for (int i = 0; i < ranges->shnum ; i++)
+	for (int i = elfPtrs->ehdr->e_shnum - 1 ; i >= 0 ; i--)
 	{
-		// printf("offsetsi:%d offset[%ld]\n", i, ht[i].sh_offset);//TODO:REMOVE
-		if (nextSection = ranges->textIndex && ht[i].sh_offset > elfPtrs->textSectionHdr->sh_offset)
-			nextSection = i;
-		else if (ht[i].sh_offset > elfPtrs->textSectionHdr->sh_offset && ht[i].sh_offset < ht[nextSection].sh_offset)
+		if (ht[i].sh_offset > elfPtrs->textSectionHdr->sh_offset && ht[i].sh_offset < ht[nextSection].sh_offset && i != ranges->textIndex)
 			nextSection = i;
 	}
 	ranges->sectionAfterText = nextSection;
@@ -129,7 +129,7 @@ int main(int ac, char** av)
 
 	setSectionsInSegment(map, &elfPtrs, &ranges);
 
-		unsigned char shellCode[] = {
+	unsigned char shellCode[] = {
 		0x48, 0xbf, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6,
 		0xf6, 0xf6, 0x48, 0xbe, 0xf0, 0xf0, 0xf0, 0xf0,
 		0xf0, 0xf0, 0xf0, 0xf0, 0x48, 0xba, 0xf5, 0xf5,
@@ -182,13 +182,11 @@ int main(int ac, char** av)
 
 		memcpy((void*)(shellCode + sizeof(shellCode) - 10), &entryPoint, 8);
 		memcpy((void*)(map + elfPtrs.targetSegment->p_offset + elfPtrs.targetSegment->p_filesz), shellCode, sizeof(shellCode));
+		// memcpy((void*)(map + elfPtrs.sHdrTable[ranges.textIndex].sh_offset + elfPtrs.sHdrTable[ranges.textIndex].sh_size), shellCode, sizeof(shellCode));
 		
 		elfPtrs.targetSegment->p_filesz += sizeof(shellCode);
 		elfPtrs.targetSegment->p_memsz += sizeof(shellCode);
 
 		write(newFd, map, fileSize);
-
 	}
-
-
 }
