@@ -168,7 +168,7 @@ int main(int ac, char** av)
 		memcpy((void*)(&elfPtrs.pHdrTable[ranges.targetSegment].p_flags), &flag, 4);
 
 		size_t pdataAdd = elfPtrs.targetSegment->p_vaddr;
-		size_t encryptSize = elfPtrs.targetSegment->p_memsz;
+		size_t encryptSize = elfPtrs.targetSegment->p_filesz;
 		size_t offsetToEncriptableData = elfPtrs.targetSegment->p_offset;
 		size_t encryptKey = generate_key();
 
